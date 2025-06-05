@@ -1,0 +1,49 @@
+name: Check OS-Specific Files
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  forbid-os-files:
+    name: Prevent OS-Specific Files
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Check for forbidden OS-specific files
+        uses: your-username/forbid-files@v1
+        with:
+          files: |
+            .DS_Store
+            ._.DS_Store
+            .DS_Store?
+            .Spotlight-V100
+            .Trashes
+            .TemporaryItems
+            .fseventsd
+            .VolumeIcon.icns
+            .AppleDouble
+            .LSOverride
+            Icon?
+            Thumbs.db
+            Thumbs.db:encryptable
+            ehthumbs.db
+            ehthumbs_vista.db
+            desktop.ini
+            Desktop.ini
+            $RECYCLE.BIN
+            System Volume Information
+            .directory
+            .trash
+            .nfs*
+            *~
+            .fuse_hidden*
+            .Trash-*
+            .xdg-volume-info
+            .xdg-volume-icon
+          fail-fast: false
+          ignore-case: true

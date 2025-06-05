@@ -1,0 +1,32 @@
+name: Check Environment Files
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  forbid-env-files:
+    name: Prevent Environment Files
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Check for forbidden environment files
+        uses: your-username/forbid-files@v1
+        with:
+          files: |
+            .env
+            .env.local
+            .env.development
+            .env.production
+            .env.staging
+            .env.test
+            config.json
+            secrets.yaml
+            secrets.yml
+            credentials.json
+            api-keys.txt
+          fail-fast: true

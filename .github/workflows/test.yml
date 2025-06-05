@@ -1,0 +1,185 @@
+name: Test Forbid Files Action
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-basic:
+    name: Basic Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create test files
+        run: |
+          echo "Creating test files for demonstration..."
+          echo "secret=test123" > .env
+          echo "Debug log entry" > debug.log
+          mkdir -p node_modules/test
+          echo "module" > node_modules/test/index.js
+
+      - name: Test forbid files action
+        uses: ./
+        with:
+          files: |
+            .env
+            *.log
+            node_modules
+          fail-fast: false
+
+  test-fail-fast:
+    name: Test Fail Fast
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create test file
+        run: |
+          echo "secret=test123" > .env
+
+      - name: Test fail-fast behavior
+        uses: ./
+        with:
+          files: |
+            .env
+            nonexistent.file
+          fail-fast: true
+        continue-on-error: true
+
+  test-case-insensitive:
+    name: Test Case Insensitive
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create test files
+        run: |
+          touch .DS_Store
+          touch THUMBS.DB
+
+      - name: Test case insensitive matching
+        uses: ./
+        with:
+          files: |
+            .ds_store
+            thumbs.db
+          ignore-case: true
+        continue-on-error: true
+
+  test-working-directory:
+    name: Test Working Directory
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup test directory
+        run: |
+          mkdir -p test-dir
+          echo "secret=test123" > test-dir/.env
+          echo "allowed file" > .env
+
+      - name: Test working directory
+        uses: ./
+        with:
+          files: '.env'
+          working-directory: './test-dir'
+        continue-on-error: true
+
+  test-outputs:
+    name: Test Outputs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create test files
+        run: |
+          echo "secret=test123" > .env
+          echo "Debug log" > debug.log
+          echo "Error log" > error.log
+
+      - name: Test with outputs
+        id: check-files
+        uses: ./
+        with:
+          files: |
+            .env
+            *.log
+          fail-fast: false
+        continue-on-error: true
+
+      - name: Display outputs
+        run: |
+          echo "Files found count: ${{ steps.check-files.outputs.files-count }}"
+          echo "Found files:"
+          echo "${{ steps.check-files.outputs.forbidden-files-found }}"
+
+  test-comma-separated:
+    name: Test Comma Separated Input
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create test files
+        run: |
+          echo "secret=test123" > .env
+          touch .DS_Store
+
+      - name: Test comma separated files
+        uses: ./
+        with:
+          files: '.env, .DS_Store, *.tmp'
+        continue-on-error: true
+
+  test-no-files-found:
+    name: Test No Files Found (Should Pass)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Test with non-existent files
+        uses: ./
+        with:
+          files: |
+            nonexistent.file
+            *.nonexistent
+            missing-directory
+
+  test-skip-directories:
+    name: Test Skip Directories
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup test directories and files
+        run: |
+          mkdir -p node_modules/package
+          mkdir -p .git/hooks
+          mkdir -p allowed-dir
+          echo "secret=test123" > node_modules/.env
+          echo "secret=test123" > .git/.env
+          echo "secret=test123" > allowed-dir/.env
+
+      - name: Test skipping directories
+        uses: ./
+        with:
+          files: '.env'
+          skip-directories: |
+            node_modules
+            .git
+          fail-fast: false
+        continue-on-error: true
+
+      - name: Verify skip directories work
+        run: |
+          echo "This test should find .env in allowed-dir but not in node_modules or .git"

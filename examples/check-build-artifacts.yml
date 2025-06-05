@@ -1,0 +1,53 @@
+name: Check Build Artifacts
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  forbid-build-artifacts:
+    name: Prevent Build Artifacts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Check for forbidden build artifacts
+        uses: your-username/forbid-files@v1
+        with:
+          files: |
+            node_modules
+            dist
+            build
+            out
+            target
+            __pycache__
+            *.pyc
+            *.pyo
+            .pytest_cache
+            coverage
+            .nyc_output
+            *.log
+            *.tmp
+            *.temp
+            .cache
+            .parcel-cache
+            .next
+            .nuxt
+            vendor
+            composer.phar
+            .venv
+            venv
+            *.egg-info
+            .tox
+            .coverage
+            htmlcov
+          fail-fast: false
+          ignore-case: true
+          skip-directories: |
+            .git
+            .github
+            .vscode
+            .idea

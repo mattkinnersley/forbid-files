@@ -1,0 +1,170 @@
+name: 'Forbid Files'
+description: 'Check if forbidden files exist in the repository and fail the workflow if found'
+author: 'forbid-files'
+
+inputs:
+  files:
+    description: 'List of files to forbid (one per line or comma-separated)'
+    required: true
+  fail-fast:
+    description: 'Whether to fail immediately on first forbidden file found'
+    required: false
+    default: 'true'
+  ignore-case:
+    description: 'Whether to ignore case when matching file names'
+    required: false
+    default: 'false'
+  working-directory:
+    description: 'Working directory to search in'
+    required: false
+    default: '.'
+  skip-directories:
+    description: 'List of directories to skip during search (one per line or comma-separated)'
+    required: false
+    default: ''
+
+outputs:
+  forbidden-files-found:
+    description: 'List of forbidden files that were found'
+    value: ${{ steps.check-files.outputs.forbidden-files-found }}
+  files-count:
+    description: 'Number of forbidden files found'
+    value: ${{ steps.check-files.outputs.files-count }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Check for forbidden files
+      id: check-files
+      shell: bash
+      run: |
+        set -e
+        
+        # Input parameters
+        FILES="${{ inputs.files }}"
+        FAIL_FAST="${{ inputs.fail-fast }}"
+        IGNORE_CASE="${{ inputs.ignore-case }}"
+        WORKING_DIR="${{ inputs.working-directory }}"
+        SKIP_DIRS="${{ inputs.skip-directories }}"
+        
+        # Change to working directory
+        cd "$WORKING_DIR"
+        
+        echo "🔍 Checking for forbidden files in: $(pwd)"
+        
+        # Convert files input to array (handle both newline and comma separation)
+        IFS=$'\n,' read -d '' -r -a file_list <<< "$FILES" || true
+        
+        # Remove empty elements and trim whitespace
+        forbidden_files=()
+        for file in "${file_list[@]}"; do
+          file=$(echo "$file" | xargs)  # trim whitespace
+          if [[ -n "$file" ]]; then
+            forbidden_files+=("$file")
+          fi
+        done
+        
+        if [[ ${#forbidden_files[@]} -eq 0 ]]; then
+          echo "❌ No files specified to check"
+          exit 1
+        fi
+        
+        echo "📋 Files to check for:"
+        printf '  - %s\n' "${forbidden_files[@]}"
+        echo ""
+        
+        # Process skip directories
+        skip_dirs=()
+        if [[ -n "$SKIP_DIRS" ]]; then
+          # Convert skip directories input to array
+          IFS=$'\n,' read -d '' -r -a skip_dir_list <<< "$SKIP_DIRS" || true
+          
+          # Clean up skip directories array
+          for dir in "${skip_dir_list[@]}"; do
+            dir=$(echo "$dir" | xargs)  # trim whitespace
+            if [[ -n "$dir" ]]; then
+              skip_dirs+=("$dir")
+            fi
+          done
+          
+          if [[ ${#skip_dirs[@]} -gt 0 ]]; then
+            echo "⏭️  Directories to skip:"
+            printf '  - %s\n' "${skip_dirs[@]}"
+            echo ""
+          fi
+        fi
+        
+        # Track found files
+        found_files=()
+        find_options=()
+        
+        # Build find command with directory exclusions
+        find_exclude_options=()
+        if [[ ${#skip_dirs[@]} -gt 0 ]]; then
+          for skip_dir in "${skip_dirs[@]}"; do
+            find_exclude_options+=("-path" "./$skip_dir" "-prune" "-o")
+          done
+        fi
+        
+        # Set case sensitivity options
+        if [[ "$IGNORE_CASE" == "true" ]]; then
+          find_options+=("-iname")
+        else
+          find_options+=("-name")
+        fi
+        
+        # Check each forbidden file
+        for forbidden_file in "${forbidden_files[@]}"; do
+          echo "🔎 Checking for: $forbidden_file"
+          
+          # Use find to search for the file
+          if [[ ${#find_exclude_options[@]} -gt 0 ]]; then
+            found_paths=$(find . "${find_exclude_options[@]}" "${find_options[@]}" "$forbidden_file" -type f -print 2>/dev/null) || true
+          else
+            found_paths=$(find . "${find_options[@]}" "$forbidden_file" -type f 2>/dev/null) || true
+          fi
+          
+          if [[ -n "$found_paths" ]]; then
+            echo "❌ Found forbidden file: $forbidden_file"
+            while IFS= read -r path; do
+              if [[ -n "$path" ]]; then
+                echo "   📍 Location: $path"
+                found_files+=("$path")
+              fi
+            done <<< "$found_paths"
+            
+            if [[ "$FAIL_FAST" == "true" ]]; then
+              echo ""
+              echo "💥 Fail-fast enabled. Stopping on first forbidden file found."
+              break
+            fi
+          else
+            echo "✅ File not found: $forbidden_file"
+          fi
+        done
+        
+        # Set outputs
+        if [[ ${#found_files[@]} -gt 0 ]]; then
+          # Join array elements with newlines for output
+          printf -v found_files_output '%s\n' "${found_files[@]}"
+          echo "forbidden-files-found<<EOF" >> $GITHUB_OUTPUT
+          echo "$found_files_output" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          echo "files-count=${#found_files[@]}" >> $GITHUB_OUTPUT
+          
+          echo ""
+          echo "❌ Found ${#found_files[@]} forbidden file(s):"
+          printf '   %s\n' "${found_files[@]}"
+          echo ""
+          echo "💡 Please remove these files and try again."
+          exit 1
+        else
+          echo "forbidden-files-found=" >> $GITHUB_OUTPUT
+          echo "files-count=0" >> $GITHUB_OUTPUT
+          echo ""
+          echo "✅ No forbidden files found!"
+        fi
+
+branding:
+  icon: 'shield'
+  color: 'red'

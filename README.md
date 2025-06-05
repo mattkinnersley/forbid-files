@@ -236,12 +236,104 @@ When forbidden files are found, the action will output detailed information:
 
 ## Best Practices
 
-1. **Use in Pre-commit Hooks**: Combine with other linting actions for comprehensive code quality checks
+1. **Use in CI/CD Pipelines**: Combine with other linting actions for comprehensive code quality checks
 2. **Fail Fast for Critical Files**: Use `fail-fast: true` for sensitive files like `.env`
 3. **Collect All Violations**: Use `fail-fast: false` when you want to see all issues at once
 4. **Case Sensitivity**: Use `ignore-case: true` for OS-specific files that might have different casing
 5. **Specific Directories**: Use `working-directory` to limit scope when needed
 6. **Skip Directories**: Use `skip-directories` to exclude large directories like `node_modules`, `.git`, or `vendor` for better performance
+
+## Local Development and Pre-commit Hooks
+
+**Important Note**: This GitHub Action runs on GitHub's servers and cannot be used directly in local pre-commit hooks. For local development, you have several options:
+
+### Option 1: Shell Script for Pre-commit
+
+Create a `.pre-commit-config.yaml` file:
+
+```yaml
+repos:
+  - repo: local
+    hooks:
+      - id: forbid-files
+        name: Check for forbidden files
+        entry: bash
+        language: system
+        args:
+          - -c
+          - |
+            forbidden_files=(.env *.log .DS_Store node_modules)
+            for pattern in "${forbidden_files[@]}"; do
+              if find . -name "$pattern" -not -path "./.git/*" | grep -q .; then
+                echo "❌ Forbidden file found: $pattern"
+                exit 1
+              fi
+            done
+            echo "✅ No forbidden files found"
+        pass_filenames: false
+```
+
+### Option 2: Custom Shell Script
+
+Create `scripts/check-forbidden-files.sh`:
+
+```bash
+#!/bin/bash
+set -e
+
+# List of forbidden files/patterns
+forbidden_files=(
+  ".env"
+  "*.log"
+  ".DS_Store"
+  "node_modules"
+  "*.tmp"
+)
+
+# Directories to skip
+skip_dirs=(
+  ".git"
+  ".github"
+)
+
+echo "🔍 Checking for forbidden files..."
+
+for pattern in "${forbidden_files[@]}"; do
+  # Build find command with exclusions
+  find_cmd="find . -name '$pattern' -type f"
+  for skip_dir in "${skip_dirs[@]}"; do
+    find_cmd="$find_cmd -not -path './$skip_dir/*'"
+  done
+  
+  if eval "$find_cmd" | grep -q .; then
+    echo "❌ Found forbidden file pattern: $pattern"
+    eval "$find_cmd"
+    exit 1
+  fi
+done
+
+echo "✅ No forbidden files found!"
+```
+
+Then add to `.pre-commit-config.yaml`:
+
+```yaml
+repos:
+  - repo: local
+    hooks:
+      - id: forbid-files
+        name: Check for forbidden files
+        entry: ./scripts/check-forbidden-files.sh
+        language: system
+        pass_filenames: false
+```
+
+### Option 3: Use Both Approaches
+
+- **Local Development**: Use pre-commit hooks with shell scripts for fast feedback
+- **CI/CD**: Use this GitHub Action for comprehensive server-side validation
+
+This dual approach ensures developers catch issues early while maintaining robust server-side checks.
 
 ## Contributing
 

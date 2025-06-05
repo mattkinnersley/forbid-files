@@ -27,7 +27,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Check for forbidden files
-        uses: mattkinnersley/forbid-files@v1
+        uses: mattkinnersley/forbid-files@1.0.0
         with:
           files: |
             .env
@@ -49,7 +49,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Check for forbidden files
-        uses: mattkinnersley/forbid-files@v1
+        uses: mattkinnersley/forbid-files@1.0.0
         with:
           files: |
             .env
@@ -76,7 +76,7 @@ jobs:
 
 ```yaml
 - name: Check for forbidden files
-  uses: mattkinnersley/forbid-files@v1
+  uses: mattkinnersley/forbid-files@1.0.0
   with:
     files: ".env, *.log, .DS_Store, node_modules"
     fail-fast: true
@@ -121,7 +121,7 @@ You can skip entire directories during the search:
 ```yaml
 - name: Check for forbidden files
   id: check-files
-  uses: mattkinnersley/forbid-files@v1
+  uses: mattkinnersley/forbid-files@1.0.0
   with:
     files: ".env, *.log"
     fail-fast: false
@@ -139,7 +139,7 @@ You can skip entire directories during the search:
 ### Prevent Environment Files
 
 ```yaml
-- uses: mattkinnersley/forbid-files@v1
+- uses: mattkinnersley/forbid-files@1.0.0
   with:
     files: |
       .env
@@ -153,7 +153,7 @@ You can skip entire directories during the search:
 ### Prevent Build Artifacts
 
 ```yaml
-- uses: mattkinnersley/forbid-files@v1
+- uses: mattkinnersley/forbid-files@1.0.0
   with:
     files: |
       node_modules
@@ -173,7 +173,7 @@ You can skip entire directories during the search:
 ### Prevent OS-Specific Files
 
 ```yaml
-- uses: mattkinnersley/forbid-files@v1
+- uses: mattkinnersley/forbid-files@1.0.0
   with:
     files: |
       .DS_Store
@@ -187,7 +187,7 @@ You can skip entire directories during the search:
 ### Prevent IDE Configuration
 
 ```yaml
-- uses: mattkinnersley/forbid-files@v1
+- uses: mattkinnersley/forbid-files@1.0.0
   with:
     files: |
       .vscode/settings.json

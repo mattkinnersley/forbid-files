@@ -5,7 +5,7 @@ A GitHub composite action that checks for forbidden files in your repository and
 ## Features
 
 - ✅ Check for multiple forbidden files at once
-- ✅ Support for glob patterns and exact file names  
+- ✅ Support for glob patterns and exact file names
 - ✅ Case-sensitive or case-insensitive matching
 - ✅ Fail-fast or collect all violations
 - ✅ Custom working directory support
@@ -25,9 +25,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Check for forbidden files
-        uses: your-username/forbid-files@v1
+        uses: mattkinnersley/forbid-files@v1
         with:
           files: |
             .env
@@ -47,9 +47,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Check for forbidden files
-        uses: your-username/forbid-files@v1
+        uses: mattkinnersley/forbid-files@v1
         with:
           files: |
             .env
@@ -76,22 +76,22 @@ jobs:
 
 ```yaml
 - name: Check for forbidden files
-  uses: your-username/forbid-files@v1
+  uses: mattkinnersley/forbid-files@v1
   with:
-    files: '.env, *.log, .DS_Store, node_modules'
+    files: ".env, *.log, .DS_Store, node_modules"
     fail-fast: true
-    skip-directories: '.git, node_modules, vendor'
+    skip-directories: ".git, node_modules, vendor"
 ```
 
 ## Inputs
 
-| Input | Description | Required | Default |
-|-------|-------------|----------|---------|
-| `files` | List of files to forbid (newline or comma-separated) | ✅ Yes | - |
-| `fail-fast` | Stop on first forbidden file found | ❌ No | `true` |
-| `ignore-case` | Ignore case when matching file names | ❌ No | `false` |
-| `working-directory` | Directory to search in | ❌ No | `.` |
-| `skip-directories` | List of directories to skip (newline or comma-separated) | ❌ No | - |
+| Input               | Description                                              | Required | Default |
+| ------------------- | -------------------------------------------------------- | -------- | ------- |
+| `files`             | List of files to forbid (newline or comma-separated)     | ✅ Yes   | -       |
+| `fail-fast`         | Stop on first forbidden file found                       | ❌ No    | `true`  |
+| `ignore-case`       | Ignore case when matching file names                     | ❌ No    | `false` |
+| `working-directory` | Directory to search in                                   | ❌ No    | `.`     |
+| `skip-directories`  | List of directories to skip (newline or comma-separated) | ❌ No    | -       |
 
 ### File Patterns
 
@@ -111,21 +111,21 @@ You can skip entire directories during the search:
 
 ## Outputs
 
-| Output | Description |
-|--------|-------------|
+| Output                  | Description                                               |
+| ----------------------- | --------------------------------------------------------- |
 | `forbidden-files-found` | Newline-separated list of forbidden files that were found |
-| `files-count` | Number of forbidden files found |
+| `files-count`           | Number of forbidden files found                           |
 
 ### Using Outputs
 
 ```yaml
 - name: Check for forbidden files
   id: check-files
-  uses: your-username/forbid-files@v1
+  uses: mattkinnersley/forbid-files@v1
   with:
-    files: '.env, *.log'
+    files: ".env, *.log"
     fail-fast: false
-    skip-directories: 'node_modules, .git'
+    skip-directories: "node_modules, .git"
 
 - name: Report findings
   if: steps.check-files.outputs.files-count > 0
@@ -139,7 +139,7 @@ You can skip entire directories during the search:
 ### Prevent Environment Files
 
 ```yaml
-- uses: your-username/forbid-files@v1
+- uses: mattkinnersley/forbid-files@v1
   with:
     files: |
       .env
@@ -153,7 +153,7 @@ You can skip entire directories during the search:
 ### Prevent Build Artifacts
 
 ```yaml
-- uses: your-username/forbid-files@v1
+- uses: mattkinnersley/forbid-files@v1
   with:
     files: |
       node_modules
@@ -173,7 +173,7 @@ You can skip entire directories during the search:
 ### Prevent OS-Specific Files
 
 ```yaml
-- uses: your-username/forbid-files@v1
+- uses: mattkinnersley/forbid-files@v1
   with:
     files: |
       .DS_Store
@@ -187,7 +187,7 @@ You can skip entire directories during the search:
 ### Prevent IDE Configuration
 
 ```yaml
-- uses: your-username/forbid-files@v1
+- uses: mattkinnersley/forbid-files@v1
   with:
     files: |
       .vscode/settings.json
@@ -258,6 +258,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Changelog
 
 ### v1.0.0
+
 - Initial release
 - Support for multiple file patterns
 - Configurable fail-fast behavior

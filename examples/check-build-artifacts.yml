@@ -2,9 +2,9 @@ name: Check Build Artifacts
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   forbid-build-artifacts:
@@ -13,9 +13,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Check for forbidden build artifacts
-        uses: your-username/forbid-files@v1
+        uses: mattkinnersley/forbid-files@v1
         with:
           files: |
             node_modules

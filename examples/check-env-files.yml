@@ -2,9 +2,9 @@ name: Check Environment Files
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   forbid-env-files:
@@ -13,9 +13,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Check for forbidden environment files
-        uses: your-username/forbid-files@v1
+        uses: mattkinnersley/forbid-files@v1
         with:
           files: |
             .env
